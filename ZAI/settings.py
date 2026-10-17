@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
+import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +27,13 @@ SECRET_KEY = 'django-insecure-j_wr1!*lv==b*yvlyhu!p0&ib&x^qg+x(2o8!^n+h6r957n_wn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['20.215.211.120']
+ALLOWED_HOSTS = [
+    '20.215.211.120', # IP maszyny wirtualnej
+    '127.0.0.1'       # localhost
+    ]
+
+TOKEN_TTL = timedelta(hours=1)
+APPEND_SLASH=False
 
 
 # Application definition
@@ -37,6 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'api',
+    'accounts'
 ]
 
 MIDDLEWARE = [
@@ -74,10 +84,26 @@ WSGI_APPLICATION = 'ZAI.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config.DB_NAME,
+        'USER': config.DB_USER,
+        'PASSWORD': config.DB_PASS,
+        'PORT': config.DB_PORT,
+        'HOST': config.DB_HOST,
+        'OPTIONS': {'options': '-c search_path=django,public'}
+    },
+    'data': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config.DB_NAME,
+        'USER': config.DB_USER,
+        'PASSWORD': config.DB_PASS,
+        'PORT': config.DB_PORT,
+        'HOST': config.DB_HOST,
+        'OPTIONS': {'options': '-c search_path=zai'}
     }
 }
+
+AUTH_USER_MODEL = "accounts.User"
 
 
 # Password validation
