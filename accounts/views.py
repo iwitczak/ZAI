@@ -63,11 +63,14 @@ def change_password(request):
         except KeyError:
             return ProblemJSONResponse(ProblemJSONContent.INVALID_REQUEST, status=400, errors={'currentPassword': 'This field is required.', 'newPassword': 'This field is required.'}).get_response()
 
+        if len(new_password) < 8 or len(new_password) > 128:
+            return ProblemJSONResponse(ProblemJSONContent.INVALID_REQUEST, status=422, errors={'newPassword': 'Provided new password must be between 8 and 128 characters long.'}).get_response()
+
         if current_user.check_password(current_password):
             current_user.set_password(new_password)
             current_user.save()
         else:
-            return ProblemJSONResponse(ProblemJSONContent.INVALID_CREDENTIALS, status=401, errors={'currentPassword': 'The provided current password is invalid.'}).get_response()
+            return ProblemJSONResponse(ProblemJSONContent.INVALID_CREDENTIALS, status=403, errors={'currentPassword': 'The provided current password is invalid.'}).get_response()
 
         # Logout user from all sessions (invalidate all tokens)
         AccessToken.objects.filter(user__username=current_user, revoked_at__isnull=True).update(revoked_at=timezone.now())
