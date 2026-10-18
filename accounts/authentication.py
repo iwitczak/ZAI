@@ -8,17 +8,16 @@ from .models import AccessToken
 class BearerTokenAuthentication(BaseAuthentication):
     def authenticate(self, request):
         parts = get_authorization_header(request).split()
-        print(parts)
         if len(parts) != 2 or parts[0].lower() != b"bearer":
             return None
         try:
-            raw = parts[1].decode()
+            token = parts[1].decode()
         except UnicodeError:
             raise AuthenticationFailed("Invalid token.")
 
         try:
             token = AccessToken.objects.select_related("user").get(
-                token_hash=AccessToken.hash(raw),
+                token_hash=AccessToken.hash(token),
                 revoked_at__isnull=True,
                 expires_at__gt=timezone.now(),
             )
@@ -29,5 +28,5 @@ class BearerTokenAuthentication(BaseAuthentication):
             raise AuthenticationFailed("Invalid token.")
         return (token.user, token)
 
-    def authenticate_header(self, request):
-        return "Bearer"
+    # def authenticate_header(self, request):
+    #     return "Bearer"
