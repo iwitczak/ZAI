@@ -22,15 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-j_wr1!*lv==b*yvlyhu!p0&ib&x^qg+x(2o8!^n+h6r957n_wn'
+SECRET_KEY = config.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '20.215.211.120', # IP maszyny wirtualnej
-    '127.0.0.1'       # localhost
-    ]
+ALLOWED_HOSTS = config.ALLOWED_HOSTS
 
 TOKEN_TTL = timedelta(hours=1)
 APPEND_SLASH=False
@@ -107,6 +104,63 @@ AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["accounts.authentication.BearerTokenAuthentication"], # Set what reads Authorization header from the request
+}
+
+# Logging
+LOG_LEVEL = "INFO" # "DEBUG" if DEBUG else "INFO"
+LOG_DIR = BASE_DIR / "logs"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} [{levelname}][{name}:{lineno}] {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "[{levelname}][{name}] {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "app.log",
+            "maxBytes": 5 * 1024 * 1024,  # 5 MB
+            "backupCount": 5,
+            "formatter": "verbose",
+            "encoding": "utf-8",
+        },
+    },
+    "loggers": {
+        # logi frameworka Django (requesty, SQL itd.)
+        "django": {
+            "handlers": ["console", "file"],
+            "level": LOG_LEVEL,
+            "propagate": False,
+        },
+        # logi Twoich aplikacji, np. logging.getLogger(__name__) w accounts/views.py
+        "accounts": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "utils": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "api": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
 }
 
 # Password validation

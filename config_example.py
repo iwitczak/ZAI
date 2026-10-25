@@ -3,3 +3,7 @@ DB_USER = ''
 DB_PASS = ''
 DB_PORT = ''
 DB_HOST = ''
+
+ALLOWED_HOSTS = []
+
+SECRET_KEY = ''
