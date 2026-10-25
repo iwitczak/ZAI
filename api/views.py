@@ -4,6 +4,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
 from api.models import Sensor, Series, Measurement
+from api.serializers import MeasurementSerializer, SensorSerializer, SeriesSerializer
 from utils.common_classes import ProblemJSONContent, ProblemJSONResponse
 from utils.wrappers import auth_required
 
@@ -23,8 +24,9 @@ class SeriesView(APIView):
 
     def get(self, request):
         # Get all Series
-        series_data = list(Series.get_all_series())
-        return JsonResponse(series_data, safe=False)
+        series_data = Series.get_all_series()
+        response = SeriesSerializer(series_data, many=True).data
+        return JsonResponse(response, status=200)
 
     @auth_required
     def post(self, request):
@@ -57,7 +59,7 @@ class SeriesView(APIView):
 
         # Create new Series element
         series = Series.create_series(name=r_name, min_value=r_min_value, max_value=r_max_value, color=r_color, icon=r_icon, unit=r_unit)
-        series_json = series.get_json()
+        series_json = SeriesSerializer(series).data
         return JsonResponse(series_json, status=201, safe=False, headers={"Location": f'api/series/{series.pk}/'})
 
 
@@ -69,8 +71,8 @@ class SeriesSingleView(APIView):
     def get(self, request, id):
         series = Series.get_series_by_id(id)
         if series is not None:
-            L.debug(series.get_json())
-            return JsonResponse(series.get_json(), status=200)
+            L.debug(SeriesSerializer(series).data)
+            return JsonResponse(SeriesSerializer(series).data, status=200)
         return Response(status=404)
 
     @auth_required
@@ -128,8 +130,78 @@ class SeriesSingleView(APIView):
         new_series = Series.get_series_by_id(id)
         if new_series is None:
             return Response(status=404)
-        return JsonResponse(data=new_series.get_json(), status=200) 
+        return JsonResponse(data=SeriesSerializer(new_series).data, status=200) 
 
+    @auth_required
+    def delete(self, request, id):
+        series = Series.get_series_by_id(id)
+        if series is None:
+            return Response(status=404)
+
+        _ = Series.delete_series(id)
+        return Response(status=204)
+
+
+# *** SENSORS ***
+class SensorView(APIView):
+    renderer_classes = [JSONRenderer]   # Accept other than json > 406
+    parser_classes = [JSONParser]       # Content-Type other than json > 415
+
+    @auth_required
+    def get(self, request):
+        sensors = Sensor.get_all_sensors()
+
+        response = SensorSerializer(sensors, many=True).data
+
+        return Response(response, status=200)
+
+    @auth_required
+    def post(self, request):
+        # Required params
+        r_name = request.data.get('name')
+        r_series_id = request.data.get('seriesId')
+
+        if not isinstance(r_name, str) or not isinstance(r_series_id, int):
+            return ProblemJSONResponse(
+                ProblemJSONContent.INVALID_REQUEST, 
+                status=400, 
+                errors={'name': 'This field is required as string.', 'seriesId': 'This field is required as integer.'}
+            ).get_response()
+
+        series = Series.get_series_by_id(r_series_id)
+        if series is None:
+            return ProblemJSONResponse(
+                ProblemJSONContent.INVALID_REQUEST, 
+                status=422, 
+                errors={'seriesId': 'Series with this id does not exist.'}
+            ).get_response()
+
+        sensor, raw_key = Sensor.create_sensor(name=r_name, series_id=r_series_id)
+        response = {
+            'id': sensor.pk,
+            'name': sensor.name,
+            'seriesId': sensor.series.pk,
+            'createdAt': sensor.created_at,
+            'lastMeasurementAt': None,
+            'apiKey': raw_key
+        }
+        return Response(response, status=201)
+
+
+class SensorSingleView(APIView):
+    renderer_classes = [JSONRenderer]   # Accept other than json > 406
+    parser_classes = [JSONParser]       # Content-Type other than json > 415
+
+    @auth_required
+    def get(self, request, id):
+        sensor = Sensor.get_sensor_by_id(id)
+        if sensor is None:
+            return Response(status=404)
+        response = SensorSerializer(sensor).data
+        return JsonResponse(response, status=201)
+
+
+    @auth_required
     def delete(self, request, id):
         pass
 
@@ -150,28 +222,9 @@ class MeasurementSingleView(APIView):
     renderer_classes = [JSONRenderer]   # Accept other than json > 406
     parser_classes = [JSONParser]       # Content-Type other than json > 415
 
-    def get(self, request):
-        pass
-
-
-# *** SENSORS ***
-class SensorView(APIView):
-    renderer_classes = [JSONRenderer]   # Accept other than json > 406
-    parser_classes = [JSONParser]       # Content-Type other than json > 415
-
-    def get(self, request):
-        pass
-
-    def post(self, request):
-        pass
-
-
-class SensorSingleView(APIView):
-    renderer_classes = [JSONRenderer]   # Accept other than json > 406
-    parser_classes = [JSONParser]       # Content-Type other than json > 415
-    
-    def get(self, request):
-        pass
-
-    def delete(self, request):
-        pass
+    def get(self, request, id):
+        measurement = Measurement.get_measurement_by_id(id)
+        if measurement is None:
+            Response(status=404)
+        response = MeasurementSerializer(measurement).data
+        return JsonResponse(data=response, status=201)

@@ -47,17 +47,6 @@ class Series(models.Model):
     def delete_series(cls, series_id):
         return cls.objects.filter(id=series_id).delete()
 
-    def get_json(self):
-        return {
-            'name': self.name,
-            'minValue': self.min_value,
-            'maxValue': self.max_value,
-            "color": self.color,
-            'icon': self.icon,
-            'unit': self.unit,
-            'id': self.pk
-        }
-
 
 # 2. Sensor
 class Sensor(models.Model):
@@ -93,18 +82,19 @@ class Sensor(models.Model):
     def create_sensor(cls, name, series_id):
         raw_key = cls._generate_api_key()
         key_hash = cls._get_api_key_hash(raw_key)
-        sensor = cls.objects.create(name=name, api_key_hash=key_hash, series_id=series_id)
+        sensor = Sensor(name=name, api_key_hash=key_hash, series_id=series_id)
+        sensor.full_clean()
+        sensor.save()
         sensor.api_key_hash = None  # Hide the hash when returning the object
         return sensor, raw_key
 
     @classmethod
     def get_sensor_by_id(cls, sensor_id):
-        return cls._get_query_with_last_measurement().filter(id=sensor_id).values('id', 'name', 'series', 'created_at', 'last_measurement_at').first()
+        return cls._get_query_with_last_measurement().filter(id=sensor_id).first() # .values('id', 'name', 'series', 'created_at', 'last_measurement_at')
 
     @classmethod
     def unregister_sensor(cls, sensor_id):
         return cls.objects.filter(id=sensor_id).update(is_active=False)
-    
     
 
 # 3. Measurement
@@ -138,7 +128,7 @@ class Measurement(models.Model):
 
     @classmethod
     def get_measurement_by_id(cls, measurement_id):
-        return cls.objects.filter(id=measurement_id).values('id', 'value', 'timestamp', 'sensor', 'sensor__series').first()
+        return cls.objects.filter(id=measurement_id).first() # .values('id', 'value', 'timestamp', 'sensor', 'sensor__series')
 
     @classmethod
     def get_min_max_values_by_series(cls, series_id) -> dict | None:

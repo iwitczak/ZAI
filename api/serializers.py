@@ -1,0 +1,30 @@
+# series/serializers.py
+from rest_framework import serializers
+
+
+class SeriesSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    minValue = serializers.FloatField(source="min_value")
+    maxValue = serializers.FloatField(source="max_value")
+    color = serializers.CharField()
+    icon = serializers.CharField(allow_null=True)
+    unit = serializers.CharField(allow_null=True)
+
+
+class SensorSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    seriesId = serializers.IntegerField(source="series_id")
+    createdAt = serializers.DateTimeField(source="created_at")
+    lastMeasurementAt = serializers.DateTimeField(
+        source="last_measurement_at", default=None, allow_null=True
+    )
+
+
+class MeasurementSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    value = serializers.FloatField()
+    timestamp = serializers.DateTimeField()
+    sensorId = serializers.IntegerField(source="sensor_id")
+    seriesId = serializers.IntegerField(source="sensor.series_id")
