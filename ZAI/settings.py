@@ -30,7 +30,7 @@ DEBUG = True
 ALLOWED_HOSTS = config.ALLOWED_HOSTS
 
 TOKEN_TTL = timedelta(hours=1)
-APPEND_SLASH=False
+APPEND_SLASH=True
 
 
 # Application definition
