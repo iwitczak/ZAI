@@ -12,6 +12,7 @@ class ProblemJSONContent(Enum):
     NOT_FOUND = {'title': "Not Found", 'detail': "The requested resource was not found."}
     NOT_ACCEPTABLE_JSON_CLIENT = {'title': "Not Acceptable", 'detail': "Client does not support application/JSON."}
     NOT_ACCEPTABLE_JSON_REQUEST = {'title': "Not Acceptable", 'detail': "application/JSON body required."}
+    CONFLICT = {'title': 'Conflict', 'detail': "Unable to update values."}
 
 
 @dataclass

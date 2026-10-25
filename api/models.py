@@ -3,7 +3,7 @@ import secrets
 
 from django.db import models
 from django.core.validators import MinLengthValidator
-from django.db.models.aggregates import Max
+from django.db.models.aggregates import Max, Min
 from django.utils.timezone import now, timedelta
 
 # 1. Series
@@ -12,13 +12,13 @@ class Series(models.Model):
     min_value = models.FloatField()
     max_value = models.FloatField()
     color = models.CharField(max_length=7)  # Hex color code
-    icon = models.CharField(max_length=255, null=True)
-    unit = models.CharField(max_length=20, null=True)
+    icon = models.CharField(max_length=255, null=True, blank=True)
+    unit = models.CharField(max_length=20, null=True, blank=True)
 
     class Meta:
         constraints = [
-            models.CheckConstraint(condition=models.Q(min_value__lt=models.F('max_value')), name='min_value_lt_max_value'),
-            models.CheckConstraint(condition=models.Q(color__regex=r'^#[0-9A-Fa-f]{6}$'), name='valid_hex_color'),
+            models.CheckConstraint(condition=models.Q(min_value__lt=models.F('max_value')), name='min_value_lt_max_value', violation_error_message="Min value must be smaller than max value."),
+            models.CheckConstraint(condition=models.Q(color__regex=r'^#[0-9A-Fa-f]{6}$'), name='valid_hex_color', violation_error_message="Invalid hex color format."),
         ]
 
     # Return all series
@@ -28,8 +28,10 @@ class Series(models.Model):
 
 
     @classmethod
-    def create_series(cls, name, min_value, max_value, color, icon, unit):
-        series = cls.objects.create(name=name, min_value=min_value, max_value=max_value, color=color, icon=icon, unit=unit)
+    def create_series(cls, name, min_value, max_value, color, icon=None, unit=None):
+        series = Series(name=name, min_value=min_value, max_value=max_value, color=color, icon=icon, unit=unit)
+        series.full_clean()
+        series.save()
         return series
 
     @classmethod
@@ -41,10 +43,20 @@ class Series(models.Model):
     def update_series(cls, series_id, name, min_value, max_value, color, icon=None, unit=None):
         return cls.objects.filter(id=series_id).update(name=name, min_value=min_value, max_value=max_value, color=color, icon=icon, unit=unit)
         
-
     @classmethod
     def delete_series(cls, series_id):
         return cls.objects.filter(id=series_id).delete()
+
+    def get_json(self):
+        return {
+            'name': self.name,
+            'minValue': self.min_value,
+            'maxValue': self.max_value,
+            "color": self.color,
+            'icon': self.icon,
+            'unit': self.unit,
+            'id': self.pk
+        }
 
 
 # 2. Sensor
@@ -127,3 +139,7 @@ class Measurement(models.Model):
     @classmethod
     def get_measurement_by_id(cls, measurement_id):
         return cls.objects.filter(id=measurement_id).values('id', 'value', 'timestamp', 'sensor', 'sensor__series').first()
+
+    @classmethod
+    def get_min_max_values_by_series(cls, series_id) -> dict | None:
+        return cls.objects.filter(sensor__series__id=series_id).aggregate(min_v = Min('value'), max_v = Max('value'))
