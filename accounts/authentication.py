@@ -28,5 +28,5 @@ class BearerTokenAuthentication(BaseAuthentication):
             raise AuthenticationFailed("Invalid token.")
         return (token.user, token)
 
-    # def authenticate_header(self, request):
-    #     return "Bearer"
+    def authenticate_header(self, request): # type: ignore # Required so status is 401, not 403
+        return "Bearer"
