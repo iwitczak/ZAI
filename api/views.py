@@ -101,6 +101,10 @@ class SeriesSingleView(APIView):
         r_icon = request.data.get('icon')
         r_unit = request.data.get('unit')
 
+        series = Series.get_series_by_id(id)
+        if series is None:
+            return Response(status=404)
+
         # Check current min and max values
         current_values = Measurement.get_min_max_values_by_series(series_id=id)
         if isinstance(current_values, dict):
@@ -119,9 +123,7 @@ class SeriesSingleView(APIView):
                     errors=errors
                 )
 
-        updated = Series.update_series(series_id=id, name=r_name, min_value=r_min_value, max_value=r_max_value, color=r_color, icon=r_icon, unit=r_unit)
-        if updated != 1:
-            Response(status=404)
+        _ = Series.update_series(series_id=id, name=r_name, min_value=r_min_value, max_value=r_max_value, color=r_color, icon=r_icon, unit=r_unit)
 
         new_series = Series.get_series_by_id(id)
         if new_series is None:
