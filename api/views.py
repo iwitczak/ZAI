@@ -1,10 +1,11 @@
 from django.http import JsonResponse
+from django.utils.timezone import now
 from rest_framework.views import APIView, Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
 from api.models import Sensor, Series, Measurement
-from api.serializers import MeasurementSerializer, SensorSerializer, SeriesSerializer
+from api.serializers import MeasurementSerializer, SensorSerializer, SeriesSerializer, TimestampSerializer
 from utils.common_classes import ProblemJSONContent, ProblemJSONResponse
 from utils.wrappers import auth_required
 
@@ -123,7 +124,7 @@ class SeriesSingleView(APIView):
                     content=ProblemJSONContent.CONFLICT,
                     status=409,
                     errors=errors
-                )
+                ).get_response()
 
         _ = Series.update_series(series_id=id, name=r_name, min_value=r_min_value, max_value=r_max_value, color=r_color, icon=r_icon, unit=r_unit)
 
@@ -203,7 +204,20 @@ class SensorSingleView(APIView):
 
     @auth_required
     def delete(self, request, id):
-        pass
+        sensor = Sensor.get_sensor_by_id(id)
+        if sensor is None:
+            return Response(status=404)
+
+        if not sensor.is_active:
+            return ProblemJSONResponse(
+                    content=ProblemJSONContent.CONFLICT,
+                    status=409,
+                    errors={'id': 'Sensor with this id is not active'}
+                ).get_response()
+
+        _ = Sensor.unregister_sensor(id)
+
+        return Response(status=204)
 
 
 # *** MEASUREMENTS ***
@@ -214,8 +228,59 @@ class MeasurementView(APIView):
     def get(self, request):
         pass
 
+    @auth_required
     def post(self, request):
-        pass
+        # Get required params
+        r_x_api_key = request.headers.get('X-API-Key')
+        r_value = request.data.get('value')
+        r_timestamp = request.data.get('timestamp')
+
+        # Verify required params
+        if r_x_api_key is None:
+            return ProblemJSONResponse(
+                content=ProblemJSONContent.UNAUTHORIZED_SENSOR,
+                status=401,
+                errors={'X-API-Key': 'Sensor api key is required.'}
+            )
+
+        sensor = Sensor.get_sensor_by_api_key(r_x_api_key)
+        if sensor is None:
+            return ProblemJSONResponse(
+                        content=ProblemJSONContent.NOT_FOUND,
+                        status=404,
+                        errors={'X-API-Key': 'Sensor with this api key was not found.'}
+                    )
+
+        series_min_val, series_max_val = sensor.series.min_value, sensor.series.max_value
+        if r_value > series_max_val or r_value < series_min_val:
+            errors = {}
+            if r_value < series_min_val:
+                errors['minValue'] = f'Value of this field must be larger or equal than Series minValue ({series_min_val}).'
+            if r_value > series_max_val:
+                errors['maxValue'] = f'Value of this field must be smaller or equal than Series minValue ({series_max_val}).'
+            return ProblemJSONResponse(
+                    ProblemJSONContent.INVALID_REQUEST, 
+                    status=422, 
+                    errors=errors
+                ).get_response()
+
+        if r_timestamp is None:
+            timestamp = now()
+        else:
+            serializer = TimestampSerializer(data = r_timestamp)
+            if not serializer.is_valid():
+                return ProblemJSONResponse(
+                    ProblemJSONContent.INVALID_REQUEST, 
+                    status=422, 
+                    errors=dict(serializer.errors)
+                ).get_response()
+
+            timestamp = serializer.validated_data["timestamp"] # type: ignore
+
+        measurement = Measurement.create_measurement(r_value, timestamp, sensor.pk)
+        measurement_json = MeasurementSerializer(measurement)
+        return JsonResponse(measurement_json, status=201, safe=False, headers={"Location": f'api/measurement/{measurement.pk}/'})
+
 
 
 class MeasurementSingleView(APIView):

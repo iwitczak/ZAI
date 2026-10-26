@@ -119,10 +119,10 @@ class Measurement(models.Model):
         return queryset.filter(timestamp__gte=from_timestamp, timestamp__lte=to_timestamp).order_by(order_by)[:limit]
 
     @classmethod
-    def create_measurement(cls, api_key, value, timestamp):
-        sensor_id = Sensor.get_sensor_by_api_key(api_key)
-        if not sensor_id:
-            return None
+    def create_measurement(cls, value, timestamp, sensor_id):
+        # sensor_id = Sensor.get_sensor_by_api_key(api_key)
+        # if not sensor_id:
+        #     return None
         measurement = cls.objects.create(value=value, timestamp=timestamp, sensor=sensor_id)
         return measurement
 

@@ -8,11 +8,13 @@ class ProblemJSONContent(Enum):
     INVALID_CREDENTIALS = {'title': "Invalid Credentials", 'detail': "The provided username or password are invalid."}
     METHOD_NOT_ALLOWED = {'title': "Method Not Allowed", 'detail': "The requested method is not allowed."}
     UNAUTHORIZED = {'title': "Unauthorized", 'detail': "The request requires user authentication."}
+    UNAUTHORIZED_SENSOR = {'title': "Unauthorized", 'detail': "The request requires sensor authentication."}
     FORBIDDEN = {'title': "Forbidden", 'detail': "The request is forbidden."}
     NOT_FOUND = {'title': "Not Found", 'detail': "The requested resource was not found."}
     NOT_ACCEPTABLE_JSON_CLIENT = {'title': "Not Acceptable", 'detail': "Client does not support application/JSON."}
     NOT_ACCEPTABLE_JSON_REQUEST = {'title': "Not Acceptable", 'detail': "application/JSON body required."}
     CONFLICT = {'title': 'Conflict', 'detail': "Unable to update values."}
+    UNPROCESSABLE = {'title': 'Unprocessable content', 'detail': 'Content is not valid within context.'}
 
 
 @dataclass

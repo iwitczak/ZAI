@@ -1,4 +1,6 @@
 # series/serializers.py
+from datetime import timedelta
+from django.utils import timezone
 from rest_framework import serializers
 
 
@@ -28,3 +30,27 @@ class MeasurementSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField()
     sensorId = serializers.IntegerField(source="sensor_id")
     seriesId = serializers.IntegerField(source="sensor.series_id")
+
+
+class TimestampSerializer(serializers.Serializer):
+    timestamp = serializers.DateTimeField() 
+
+    def validate_timestamp(self, value):
+        now = timezone.now()
+
+        if value < now - timedelta(minutes=5):
+            raise serializers.ValidationError("Timestamp is older than 5 minutes.")
+
+        return value
+
+
+class DateRangeSerializer(serializers.Serializer):
+    date_from = serializers.DateTimeField()
+    date_to = serializers.DateTimeField()
+
+    def validate(self, attrs):
+        if attrs["date_to"] < attrs["date_from"]:
+            raise serializers.ValidationError(
+                {"to": "Date to cannot be earlier than date from."}
+            )
+        return attrs
