@@ -120,7 +120,7 @@ class Measurement(models.Model):
 
     @classmethod
     def create_measurement(cls, value, timestamp, sensor_id):
-        measurement = cls.objects.create(value=value, timestamp=timestamp, sensor=sensor_id)
+        measurement = cls.objects.create(value=value, timestamp=timestamp, sensor_id=sensor_id)
         return measurement
 
     @classmethod

@@ -30,7 +30,7 @@ class SeriesView(APIView):
         # Get all Series
         series_data = Series.get_all_series()
         response = SeriesSerializer(series_data, many=True).data
-        return JsonResponse(response, status=200)
+        return JsonResponse(response, status=200, safe=False)
 
     @auth_required
     def post(self, request):
@@ -64,7 +64,7 @@ class SeriesView(APIView):
         # Create new Series element
         series = Series.create_series(name=r_name, min_value=r_min_value, max_value=r_max_value, color=r_color, icon=r_icon, unit=r_unit)
         series_json = SeriesSerializer(series).data
-        return JsonResponse(series_json, status=201, safe=False, headers={"Location": f'api/series/{series.pk}/'})
+        return JsonResponse(series_json, status=201, safe=False, headers={"Location": f'/api/series/{series.pk}'})
 
 
 
@@ -189,7 +189,7 @@ class SensorView(APIView):
             'lastMeasurementAt': None,
             'apiKey': raw_key
         }
-        return Response(response, status=201)
+        return Response(response, status=201, headers={"Location": f'/api/measurements/{sensor.pk}'})
 
 
 class SensorSingleView(APIView):
@@ -202,7 +202,7 @@ class SensorSingleView(APIView):
         if sensor is None:
             return Response(status=404)
         response = SensorSerializer(sensor).data
-        return JsonResponse(response, status=201)
+        return JsonResponse(response, status=200)
 
 
     @auth_required
@@ -235,6 +235,7 @@ class MeasurementView(APIView):
         r_limit = request.query_params.get('limit', 1000)
         r_time_from = request.query_params.get('from', now() - timedelta(hours=1))
         r_time_to = request.query_params.get('to', now())
+        L.debug(f'{r_series}, {r_sort} {r_limit} {r_time_from} {r_time_to}')
 
         # Parse series array
         series_regex = re.compile(r"^\s*\d+(\s*,\s*\d+)*\s*$")
@@ -279,11 +280,9 @@ class MeasurementView(APIView):
 
         # Model query
         measurements = Measurement.get_measurements(from_timestamp=time_from, to_timestamp=time_to, series=series, order_by=sort, limit=limit)
-        measurements_json = [MeasurementSerializer(m) for m in measurements]
 
-        return JsonResponse(data=measurements_json, status=200, safe=False)
+        return JsonResponse(data=MeasurementSerializer(measurements, many=True).data, status=200, safe=False)
 
-    @auth_required
     def post(self, request):
         # Get required params
         r_x_api_key = request.headers.get('X-API-Key')
@@ -296,7 +295,7 @@ class MeasurementView(APIView):
                 content=ProblemJSONContent.UNAUTHORIZED_SENSOR,
                 status=401,
                 errors={'X-API-Key': 'Sensor api key is required.'}
-            )
+            ).get_response()
 
         sensor = Sensor.get_sensor_by_api_key(r_x_api_key)
         if sensor is None:
@@ -304,10 +303,11 @@ class MeasurementView(APIView):
                         content=ProblemJSONContent.NOT_FOUND,
                         status=404,
                         errors={'X-API-Key': 'Sensor with this api key was not found.'}
-                    )
+                    ).get_response()
 
         series_min_val, series_max_val = sensor.series.min_value, sensor.series.max_value
         if r_value > series_max_val or r_value < series_min_val:
+            L.warning(f'Values: {series_min_val}, {series_max_val}, r_value: {r_value}')
             errors = {}
             if r_value < series_min_val:
                 errors['minValue'] = f'Value of this field must be larger or equal than Series minValue ({series_min_val}).'
@@ -322,8 +322,10 @@ class MeasurementView(APIView):
         if r_timestamp is None:
             timestamp = now()
         else:
-            serializer = TimestampSerializer(data = r_timestamp)
+            
+            serializer = TimestampSerializer(data = {'timestamp': r_timestamp})
             if not serializer.is_valid():
+                L.error(f"Date {r_timestamp}; {dict(serializer.errors)}")
                 return ProblemJSONResponse(
                     ProblemJSONContent.INVALID_REQUEST, 
                     status=422, 
@@ -333,8 +335,8 @@ class MeasurementView(APIView):
             timestamp = serializer.validated_data["timestamp"] # type: ignore
 
         measurement = Measurement.create_measurement(r_value, timestamp, sensor.pk)
-        measurement_json = MeasurementSerializer(measurement)
-        return JsonResponse(measurement_json, status=201, safe=False, headers={"Location": f'api/measurement/{measurement.pk}/'})
+        measurement_json = MeasurementSerializer(measurement).data
+        return JsonResponse(measurement_json, status=201, safe=False, headers={"Location": f'/api/measurements/{measurement.pk}'})
 
 
 
@@ -347,4 +349,4 @@ class MeasurementSingleView(APIView):
         if measurement is None:
             Response(status=404)
         response = MeasurementSerializer(measurement).data
-        return JsonResponse(data=response, status=201)
+        return JsonResponse(data=response, status=200)
