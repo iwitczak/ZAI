@@ -1,3 +1,6 @@
+from datetime import timedelta
+import re
+
 from django.http import JsonResponse
 from django.utils.timezone import now
 from rest_framework.views import APIView, Response
@@ -5,7 +8,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
 from api.models import Sensor, Series, Measurement
-from api.serializers import MeasurementSerializer, SensorSerializer, SeriesSerializer, TimestampSerializer
+from api.serializers import DateRangeSerializer, MeasurementSerializer, SensorSerializer, SeriesSerializer, TimestampSerializer
 from utils.common_classes import ProblemJSONContent, ProblemJSONResponse
 from utils.wrappers import auth_required
 
@@ -226,7 +229,59 @@ class MeasurementView(APIView):
     parser_classes = [JSONParser]       # Content-Type other than json > 415
 
     def get(self, request):
-        pass
+        # Get params
+        r_series = request.query_params.get('series')
+        r_sort = request.query_params.get('sort', 'timestamp')
+        r_limit = request.query_params.get('limit', 1000)
+        r_time_from = request.query_params.get('from', now() - timedelta(hours=1))
+        r_time_to = request.query_params.get('to', now())
+
+        # Parse series array
+        series_regex = re.compile(r"^\s*\d+(\s*,\s*\d+)*\s*$")
+        if isinstance(r_series, str) and r_series != '' and series_regex.fullmatch(r_series):
+            series = r_series.strip().split(',')
+        elif r_series == None:
+            series = None
+        else:
+            return ProblemJSONResponse(
+                ProblemJSONContent.INVALID_REQUEST, 
+                status=400, 
+                errors={'series': 'This parameter must be comma separated string or empty'}
+            ).get_response()
+
+        # Parse sort
+        if r_sort == '-timestamp':
+            sort = '-timestamp'
+        else:
+            sort = 'timestamp'
+
+        # Parse limit
+        if isinstance(r_limit, int):
+            limit = r_limit 
+        else:
+            return ProblemJSONResponse(
+                ProblemJSONContent.INVALID_REQUEST, 
+                status=400, 
+                errors={'limit': 'This parameter must be int or empty'}
+            ).get_response()
+
+        # Parse time
+        time_serializer = DateRangeSerializer(data = {'date_from': r_time_from, 'date_to': r_time_to})
+        if not time_serializer.is_valid():
+            return ProblemJSONResponse(
+                ProblemJSONContent.INVALID_REQUEST, 
+                status=400, 
+                errors=dict(time_serializer.errors)
+            ).get_response()
+
+        time_from = time_serializer.validated_data['date_from']  # type: ignore
+        time_to = time_serializer.validated_data['date_to'] # type: ignore
+
+        # Model query
+        measurements = Measurement.get_measurements(from_timestamp=time_from, to_timestamp=time_to, series=series, order_by=sort, limit=limit)
+        measurements_json = [MeasurementSerializer(m) for m in measurements]
+
+        return JsonResponse(data=measurements_json, status=200, safe=False)
 
     @auth_required
     def post(self, request):

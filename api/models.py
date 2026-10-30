@@ -120,9 +120,6 @@ class Measurement(models.Model):
 
     @classmethod
     def create_measurement(cls, value, timestamp, sensor_id):
-        # sensor_id = Sensor.get_sensor_by_api_key(api_key)
-        # if not sensor_id:
-        #     return None
         measurement = cls.objects.create(value=value, timestamp=timestamp, sensor=sensor_id)
         return measurement
 
