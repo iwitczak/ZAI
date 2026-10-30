@@ -38,8 +38,8 @@ class TimestampSerializer(serializers.Serializer):
     def validate_timestamp(self, value):
         now = timezone.now()
 
-        if value < now - timedelta(minutes=5):
-            raise serializers.ValidationError("Timestamp is older than 5 minutes.")
+        if value > now + timedelta(minutes=5):
+            raise serializers.ValidationError("Timestamp must not be from the future.")
 
         return value
 
