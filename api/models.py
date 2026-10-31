@@ -4,7 +4,7 @@ import secrets
 from django.db import models
 from django.core.validators import MinLengthValidator
 from django.db.models.aggregates import Max, Min
-from django.utils.timezone import now, timedelta
+from django.utils.timezone import now
 
 # 1. Series
 class Series(models.Model):
@@ -45,7 +45,7 @@ class Series(models.Model):
         
     @classmethod
     def delete_series(cls, series_id):
-        return cls.objects.filter(id=series_id).delete()
+        return cls.objects.filter(pk=series_id).delete()
 
 
 # 2. Sensor
@@ -113,10 +113,12 @@ class Measurement(models.Model):
         else:
             queryset = cls.objects.all()
 
-        from_timestamp = from_timestamp or now() - timedelta(days=1)
-        to_timestamp = to_timestamp or now()
+        if from_timestamp is not None:
+            queryset = queryset.filter(timestamp__gte=from_timestamp)
+        if to_timestamp is not None:
+            queryset = queryset.filter(timestamp__lte=to_timestamp)
 
-        return queryset.filter(timestamp__gte=from_timestamp, timestamp__lte=to_timestamp).order_by(order_by)[:limit]
+        return queryset.order_by(order_by)[:limit]
 
     @classmethod
     def create_measurement(cls, value, timestamp, sensor_id):

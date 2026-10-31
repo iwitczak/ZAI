@@ -77,7 +77,7 @@ class SeriesSingleView(APIView):
         if series is not None:
             L.debug(SeriesSerializer(series).data)
             return JsonResponse(SeriesSerializer(series).data, status=200)
-        return Response(status=404)
+        return ProblemJSONResponse(ProblemJSONContent.NOT_FOUND, errors={'id': 'Series with provided id was not found.'}, status=404).get_response()
 
     @auth_required
     def put(self, request, id):
@@ -133,14 +133,14 @@ class SeriesSingleView(APIView):
 
         new_series = Series.get_series_by_id(id)
         if new_series is None:
-            return Response(status=404)
+            return ProblemJSONResponse(ProblemJSONContent.NOT_FOUND, errors={'id': 'Series with provided id was not found.'}, status=404).get_response()
         return JsonResponse(data=SeriesSerializer(new_series).data, status=200) 
 
     @auth_required
     def delete(self, request, id):
         series = Series.get_series_by_id(id)
         if series is None:
-            return Response(status=404)
+            return ProblemJSONResponse(ProblemJSONContent.NOT_FOUND, errors={'id': 'Series with provided id was not found.'}, status=404).get_response()
 
         _ = Series.delete_series(id)
         return Response(status=204)
@@ -233,8 +233,8 @@ class MeasurementView(APIView):
         r_series = request.query_params.get('series')
         r_sort = request.query_params.get('sort', 'timestamp')
         r_limit = request.query_params.get('limit', 1000)
-        r_time_from = request.query_params.get('from', now() - timedelta(hours=1))
-        r_time_to = request.query_params.get('to', now())
+        r_time_from = request.query_params.get('from')
+        r_time_to = request.query_params.get('to')
         L.debug(f'{r_series}, {r_sort} {r_limit} {r_time_from} {r_time_to}')
 
         # Parse series array
@@ -267,16 +267,39 @@ class MeasurementView(APIView):
             ).get_response()
 
         # Parse time
-        time_serializer = DateRangeSerializer(data = {'date_from': r_time_from, 'date_to': r_time_to})
-        if not time_serializer.is_valid():
-            return ProblemJSONResponse(
-                ProblemJSONContent.INVALID_REQUEST, 
-                status=400, 
-                errors=dict(time_serializer.errors)
-            ).get_response()
-
-        time_from = time_serializer.validated_data['date_from']  # type: ignore
-        time_to = time_serializer.validated_data['date_to'] # type: ignore
+        time_to = None
+        time_from = None
+        if r_time_from is not None and r_time_to is not None:
+            time_serializer = DateRangeSerializer(data = {'date_from': r_time_from, 'date_to': r_time_to})
+            if not time_serializer.is_valid():
+                return ProblemJSONResponse(
+                    ProblemJSONContent.INVALID_REQUEST, 
+                    status=400, 
+                    errors=dict(time_serializer.errors)
+                ).get_response()
+            time_from = time_serializer.validated_data['date_from']  # type: ignore
+            time_to = time_serializer.validated_data['date_to'] # type: ignore
+        elif r_time_to is not None:
+            serializer = TimestampSerializer(data = {'timestamp': r_time_to})
+            if not serializer.is_valid():
+                L.error(f"Date {r_time_to}; {dict(serializer.errors)}")
+                return ProblemJSONResponse(
+                    ProblemJSONContent.INVALID_REQUEST, 
+                    status=422, 
+                    errors=dict(serializer.errors)
+                ).get_response()
+            time_to = time_serializer.validated_data['date_from']  # type: ignore
+        elif r_time_from is not None:
+            serializer = TimestampSerializer(data = {'timestamp': r_time_from})
+            if not serializer.is_valid():
+                L.error(f"Date {r_time_from}; {dict(serializer.errors)}")
+                return ProblemJSONResponse(
+                    ProblemJSONContent.INVALID_REQUEST, 
+                    status=422, 
+                    errors=dict(serializer.errors)
+                ).get_response()
+            time_from = time_serializer.validated_data['date_from']  # type: ignore
+            
 
         # Model query
         measurements = Measurement.get_measurements(from_timestamp=time_from, to_timestamp=time_to, series=series, order_by=sort, limit=limit)
@@ -301,7 +324,7 @@ class MeasurementView(APIView):
         if sensor is None:
             return ProblemJSONResponse(
                         content=ProblemJSONContent.NOT_FOUND,
-                        status=404,
+                        status=401,
                         errors={'X-API-Key': 'Sensor with this api key was not found.'}
                     ).get_response()
 
@@ -347,6 +370,6 @@ class MeasurementSingleView(APIView):
     def get(self, request, id):
         measurement = Measurement.get_measurement_by_id(id)
         if measurement is None:
-            Response(status=404)
+            return ProblemJSONResponse(ProblemJSONContent.NOT_FOUND, errors={'id': 'Measurement with provided id was not found.'}, status=404).get_response()
         response = MeasurementSerializer(measurement).data
         return JsonResponse(data=response, status=200)
