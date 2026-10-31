@@ -285,7 +285,7 @@ class MeasurementView(APIView):
                 L.error(f"Date {r_time_to}; {dict(serializer.errors)}")
                 return ProblemJSONResponse(
                     ProblemJSONContent.INVALID_REQUEST, 
-                    status=422, 
+                    status=400, 
                     errors=dict(serializer.errors)
                 ).get_response()
             time_to = time_serializer.validated_data['date_from']  # type: ignore
@@ -295,7 +295,7 @@ class MeasurementView(APIView):
                 L.error(f"Date {r_time_from}; {dict(serializer.errors)}")
                 return ProblemJSONResponse(
                     ProblemJSONContent.INVALID_REQUEST, 
-                    status=422, 
+                    status=400, 
                     errors=dict(serializer.errors)
                 ).get_response()
             time_from = time_serializer.validated_data['date_from']  # type: ignore
@@ -327,6 +327,13 @@ class MeasurementView(APIView):
                         status=401,
                         errors={'X-API-Key': 'Sensor with this api key was not found.'}
                     ).get_response()
+
+        if not isinstance(r_value, (int, float)):
+            return ProblemJSONResponse(
+                    content=ProblemJSONContent.INVALID_REQUEST,
+                    status=400,
+                    errors={'value': 'Must be numeric.'}
+                ).get_response()
 
         series_min_val, series_max_val = sensor.series.min_value, sensor.series.max_value
         if r_value > series_max_val or r_value < series_min_val:
