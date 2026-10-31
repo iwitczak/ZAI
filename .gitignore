@@ -37,3 +37,7 @@ Thumbs.db
 
 # Config
 config.py
+
+# Node
+node_modules/
+package-lock.json
