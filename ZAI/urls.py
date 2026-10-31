@@ -18,8 +18,10 @@ Including another URLconf
 from django.urls import include, path
 import api.urls as api_urls
 import accounts.urls as accounts_urls
+import ZAI.views as v
 
 urlpatterns = [
     path('api/', include(api_urls)),
     path('api/auth/', include(accounts_urls)),
+    path('', v.index), 
 ]
