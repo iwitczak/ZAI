@@ -1,4 +1,3 @@
-from datetime import timedelta
 import re
 
 from django.http import JsonResponse
@@ -337,7 +336,7 @@ class MeasurementView(APIView):
 
         series_min_val, series_max_val = sensor.series.min_value, sensor.series.max_value
         if r_value > series_max_val or r_value < series_min_val:
-            L.warning(f'Values: {series_min_val}, {series_max_val}, r_value: {r_value}')
+            L.error(f'Sensor POST values exceed min/max range of corresponding Series\nMin: {series_min_val}\nMax: {series_max_val}\nValue: {r_value}')
             errors = {}
             if r_value < series_min_val:
                 errors['minValue'] = f'Value of this field must be larger or equal than Series minValue ({series_min_val}).'
