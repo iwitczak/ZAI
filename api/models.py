@@ -90,7 +90,7 @@ class Sensor(models.Model):
 
     @classmethod
     def get_sensor_by_id(cls, sensor_id):
-        return cls._get_query_with_last_measurement().filter(id=sensor_id).first() # .values('id', 'name', 'series', 'created_at', 'last_measurement_at')
+        return cls._get_query_with_last_measurement().filter(id=sensor_id).first()
 
     @classmethod
     def unregister_sensor(cls, sensor_id):
@@ -104,6 +104,12 @@ class Measurement(models.Model):
 
     sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE)  # When Sensor is deleted, delete all associated measurements
 
+    # Indexes
+    class Meta:
+        indexes = [
+            models.Index(fields=["timestamp"], name="measurement_timestamp_idx"), # Timestamp index
+            models.Index(fields=["-timestamp"], name="measurement_timestamp_idx_desc"), # Reversed timestamp index
+        ]
 
     @classmethod
     def get_measurements(cls, from_timestamp=None, to_timestamp=None, series=None, order_by='timestamp', limit=1000):
@@ -127,7 +133,7 @@ class Measurement(models.Model):
 
     @classmethod
     def get_measurement_by_id(cls, measurement_id):
-        return cls.objects.filter(id=measurement_id).first() # .values('id', 'value', 'timestamp', 'sensor', 'sensor__series')
+        return cls.objects.filter(id=measurement_id).first()
 
     @classmethod
     def get_min_max_values_by_series(cls, series_id) -> dict | None:
