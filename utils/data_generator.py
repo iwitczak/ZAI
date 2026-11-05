@@ -22,7 +22,8 @@ import requests
 # ***
 # CONFIGURATION
 # ***
-SERVER_URL = "http://localhost:8000/api/measurements"  # endpoint for inserting data (defaults to Django development server)
+SERVER_API_URL = 'http://127.0.0.1:8000/api/'
+SERVER_MEASUREMENTS_URL = SERVER_API_URL + "measurements"  # endpoint for inserting data (defaults to Django development server)
 API_KEY_HEADER = "X-API-Key"                           # header carrying the API key
 REQUEST_TIMEOUT = 10                                   # seconds
 
@@ -31,12 +32,26 @@ IMGW_SYNOP_URL = "https://danepubliczne.imgw.pl/api/data/synop"
 IMGW_DEFAULT_FIELD = "temperatura"
 
 # Predefined temperature measurements for example mode
-EXAMPLE_SERIES = [
-    [12.1, 12.4, 12.9, 13.5, 14.2, 15.0, 15.8, 16.3, 16.9, 17.2, 17.0, 16.5, 15.9, 15.1, 14.4],
-    [8.5, 8.7, 9.0, 9.6, 10.3, 11.1, 11.8, 12.4, 12.9, 13.1, 12.8, 12.2, 11.5, 10.7, 10.0],
-    [19.8, 20.1, 20.6, 21.2, 21.9, 22.5, 23.1, 23.4, 23.2, 22.8, 22.3, 21.7, 21.0, 20.4, 19.9],
+SERVER_LOGIN_URL = SERVER_API_URL + 'auth/login'
+SERVER_SERIES_URL = SERVER_API_URL + 'series'
+SERVER_SENSOR_URL = SERVER_API_URL + 'sensors'
+
+EXAMPLE_SERIES_VALUES = [
+    [12.1, 12.4, 12.9, 13.5, 14.2, 15.0, 15.8, 16.3, 16.9, 17.2, 17.0, 16.5, 15.9, 15.1, 14.4, 14],
+    [8.5, 8.7, 9.0, 9.6, 10.3, 11.1, 11.8, 12.4, 12.9, 13.1, 12.8, 12.2, 11.5, 10.7, 10.0, 10.2],
+    [19.8, 20.1, 20.6, 21.2, 21.9, 22.5, 23.1, 23.4, 23.2, 22.8, 22.3, 21.7, 21.0, 20.4, 19.9, 20.0],
 ]
 EXAMPLE_STEP_MINUTES = 10  # interval between example measurements
+EXAMPLE_SERIES = [
+    {"name": "example1","minValue": -40,"maxValue": 50,"color": "#1f77b4","icon": "string","unit": "°C"},
+    {"name": "example2","minValue": -40,"maxValue": 50,"color": "#0ba82d","icon": "string","unit": "°C"},
+    {"name": "example3","minValue": -40,"maxValue": 50,"color": "#b41f1f","icon": "string","unit": "°C"},
+]
+EXAMPLE_SENSORS = [
+    {"name": "sensor_ex1"},
+    {"name": "sensor_ex2"},
+    {"name": "sensor_ex3"},
+]
 
 
 # ***
@@ -55,7 +70,7 @@ def send_measurement(api_key: str, value: float, dt: datetime, dry_run: bool = F
         return True
     try:
         resp = requests.post(
-            SERVER_URL,
+            SERVER_MEASUREMENTS_URL,
             json=payload,
             headers={API_KEY_HEADER: api_key},
             timeout=REQUEST_TIMEOUT,
@@ -140,11 +155,60 @@ def generate_random_values(count: int, v_min: float, v_max: float, max_step: flo
 # Mode 1: Example data
 # ***
 def mode_example(dry_run: bool) -> None:
-    print("\n--- Example data: 3 API keys required ---")
-    keys = [ask(f"API key #{i + 1}") for i in range(3)]
+    print("\n--- Example data: Admin login required ---")
+    # 0. Admin login
+    admin_login = ask('Admin login')
+    admin_password = ask('Admin password')
+    print(admin_password, admin_login)
 
+    json = {'username': admin_login, 'password': admin_password}
+    resp = requests.post(
+        url=SERVER_LOGIN_URL,
+        json = json,
+        timeout=REQUEST_TIMEOUT
+        )
+
+    key = resp.json().get('accessToken')
+    if key is None:
+        print('Login error - did not receive token')
+        return
+
+    # 1. Create 3 example series
+    series_ids = []
+    for s in EXAMPLE_SERIES:
+        resp = requests.post(
+                url=SERVER_SERIES_URL,
+                json = s,
+                headers={'Authorization': f'Bearer {key}'},
+                timeout=REQUEST_TIMEOUT
+                )
+        id = resp.json().get('id')
+        if id is None:
+            print('Error - did not receive series id')
+            return
+        series_ids.append(id)
+        
+    # 2. Create 3 example sensors and save their key
+    keys = []
+    for i, s in enumerate(EXAMPLE_SENSORS):
+        sensor_json = s
+        sensor_json["seriesId"] = series_ids[i]
+        resp = requests.post(
+                url=SERVER_SENSOR_URL,
+                json = sensor_json,
+                headers={'Authorization': f'Bearer {key}'},
+                timeout=REQUEST_TIMEOUT
+                )
+        api_key = resp.json().get('apiKey')
+        if api_key is None:
+            print('Error - did not receive sensor apiKey')
+            return
+        keys.append(api_key)
+
+
+    # 3. Input values for each sensor
     now = datetime.now(timezone.utc)
-    for key, series in zip(keys, EXAMPLE_SERIES):
+    for key, series in zip(keys, EXAMPLE_SERIES_VALUES):
         n = len(series)
         for i, value in enumerate(series):
             # oldest measurement first, the last one = now
@@ -290,9 +354,9 @@ def main() -> None:
     parser.add_argument("--url", help="override SERVER_URL")
     args = parser.parse_args()
 
-    global SERVER_URL
+    global SERVER_MEASUREMENTS_URL
     if args.url:
-        SERVER_URL = args.url
+        SERVER_MEASUREMENTS_URL = args.url
 
     print("=== Example data generator ===")
     print("1) Example data (3 API keys, 15 measurements per key)")
@@ -303,10 +367,10 @@ def main() -> None:
     modes = {"1": mode_example, "2": mode_custom, "3": mode_real}
     if choice not in modes:
         sys.exit("Unknown mode.")
-    try:
-        modes[choice](args.dry_run)
-    except ValueError as e:
-        sys.exit(f"[ERROR] {e}")
+    # try:
+    modes[choice](args.dry_run)
+    # except ValueError as e:
+    #     sys.exit(f"[ERROR] {e}")
 
 
 if __name__ == "__main__":
