@@ -1,12 +1,121 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>{% block title %}Home{% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZAI-APP</title>
+
+  <script src="{% static 'vendor/js/bootstrap.bundle.min.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'vendor/css/bootstrap.min.css' %}">
+
+  <style>
+    .padding-lr-1 {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .navbar-text {
+      font-size: 1rem;
+      padding: 0.375rem 0.75rem 0.375rem 0.75rem;
+      line-height: 1.5;
+      margin-right: 0.5rem;
+    }
+
+  </style>
+  
 </head>
 <body>
-	Test
-	{% block content %}{% endblock %}
+  {% verbatim %}
+  <div id="app" v-cloak>
+    <!-- Nav bar -->
+    <div id="app-nav-bar">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light px-3">
+        <a class="navbar-brand">ZAI</a>
+        <button class="navbar-toggler" type="button" 
+          data-bs-toggle="collapse" data-bs-target="#navbarContent" 
+          aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation"
+          >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse inline-flex justify-content-between" id="navbarContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#" @click.prevent="state.page = 'home'">Visualize</a>
+            </li>
+
+            <li class="nav-item dropdown" v-if="isAuthenticated">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarManageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Manage
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarManageDropdown">
+                <li><a class="dropdown-item" href="#" @click.prevent="state.page = 'manage-sensors'">Sensors</a></li>
+                <li><a class="dropdown-item" href="#" @click.prevent="state.page = 'manage-series'">Series</a></li>
+              </ul>
+            </li>
+
+          </ul>
+
+          <div id="navbar-auth-div">
+            <template v-if="isAuthenticated">
+              <span class="navbar-text">Welcome, {{ state.username }}</span>
+              <button id="btn-change-password" type="button" class="btn" @click.prevent="state.page = 'user-change-password'">Change Password</button>
+              <button id="btn-logout" type="button" class="btn" @click.prevent="logout">Logout</button>
+            </template>
+            
+            <template v-else>
+              <span class="navbar-text">Not logged in</span>
+              <button id="btn-login" type="button" class="btn" @click.prevent="state.page = 'user-login'">Login</button>
+            </template>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <main id="app-content" class="m-3">
+      <component :is="state.page" @logged-in="state.page = 'home'"/>
+    </main>
+  </div>
+
+  <template id="tpl-user-login">
+    <section v-if="!isAuthenticated">
+      <h1>Log in</h1>
+      <form @submit.prevent="login">
+        <input v-model="credentials.username" placeholder="Login" required>
+        <input v-model="credentials.password" type="password" placeholder="Password" required>
+        <button type="submit" :disabled="saving">Log in</button>
+      </form>
+      <p v-if="error" class="error">{{ error }}</p>
+    </section>
+    <section v-else><span>Already logged in</span></section>
+  </template>
+
+
+  <template id="tpl-user-change-password">
+
+  </template>
+
+
+  <template id="tpl-home">
+    ABC
+  </template>
+
+
+  <template id="tpl-manage-sensors">
+
+  </template>
+
+
+  <template id="tpl-manage-series">
+
+  </template>
+  {% endverbatim %}
+
+  <script src="{% static 'vendor/js/vue.global.js' %}"></script>
+  <script src="{% static 'js/api.js' %}"></script>
+  <script src="{% static 'js/state.js' %}"></script>
+  <script src="{% static 'js/app.js' %}"></script>
+  <script src="{% static 'vendor/js/echarts.min.js' %}"></script>
+  <script src="{% static 'vendor/js/tabulator.min.js' %}"></script>
 </body>
 </html>
