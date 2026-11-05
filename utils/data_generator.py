@@ -16,6 +16,7 @@ import sys
 import time
 import unicodedata
 from datetime import datetime, timedelta, timezone
+from getpass import getpass
 
 import requests
 
@@ -158,8 +159,7 @@ def mode_example(dry_run: bool) -> None:
     print("\n--- Example data: Admin login required ---")
     # 0. Admin login
     admin_login = ask('Admin login')
-    admin_password = ask('Admin password')
-    print(admin_password, admin_login)
+    admin_password = getpass()
 
     json = {'username': admin_login, 'password': admin_password}
     resp = requests.post(
