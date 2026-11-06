@@ -58,7 +58,7 @@
 
           <div id="navbar-auth-div">
             <template v-if="isAuthenticated">
-              <span class="navbar-text">Welcome, {{ state.username }}</span>
+              <span class="navbar-text">Welcome, {{ auth?.username ?? '' }}</span>
               <button id="btn-change-password" type="button" class="btn" @click.prevent="state.page = 'user-change-password'">Change Password</button>
               <button id="btn-logout" type="button" class="btn" @click.prevent="logout">Logout</button>
             </template>
@@ -92,6 +92,16 @@
 
 
   <template id="tpl-user-change-password">
+    <section v-if="!isAuthenticated">
+      <h1>Change password</h1>
+      <form @submit.prevent="changePassword">
+        <input v-model="passwords.currentPassword" type="password" placeholder="Current password" required>
+        <input v-model="passwords.newPassword" type="password" placeholder="New Password" required>
+        <button type="submit" :disabled="saving">Change password</button>
+      </form>
+      <p v-if="error" class="error">{{ error }}</p>
+    </section>
+    <section v-else><span>Not logged in, access forbidden</span></section>
 
   </template>
 
@@ -102,12 +112,12 @@
 
 
   <template id="tpl-manage-sensors">
-
+    Sensors
   </template>
 
 
   <template id="tpl-manage-series">
-
+    Series
   </template>
   {% endverbatim %}
 

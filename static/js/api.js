@@ -1,14 +1,44 @@
 const API_BASE = '/api';
-const TOKEN_KEY = 'auth_token';
+const KEY = 'auth'
+
+const savedAuth = JSON.parse(localStorage.getItem(KEY) || 'null');
 
 const auth = Vue.reactive({
-  token: localStorage.getItem(TOKEN_KEY),
-  set(value) { 
-    this.token = value
-    value ? localStorage.setItem(TOKEN_KEY, value) : localStorage.removeItem(TOKEN_KEY); 
+  token: savedAuth?.token ?? null,
+  username: savedAuth?.username ?? '',
+  expiresAt: savedAuth?.expiresAt ?? 0,
+
+  onUnauthorized: () => {}, 
+  onLogout: () => {},
+
+  login(token, user, expiresAt) { 
+    this.token = token;
+    this.username = user;
+    this.expiresAt = expiresAt;
+
+    localStorage.setItem(KEY, JSON.stringify({token, username: user, expiresAt}));
+    this.startTimer();
   },
-    onUnauthorized: () => {}, 
+
+  logout() {
+    this.token = null;
+    this.username = '';
+    this.expiresAt = 0;
+    localStorage.removeItem(KEY);
+    clearTimeout(this._timer);
+    this.onLogout();
+  },
+
+  startTimer() {
+    clearTimeout(this._timer);
+    if (!this.token) {return};
+    const time = this.expiresAt - Date.now();
+    this._timer = setTimeout(() => this.logout(), time);
+  }
+    
 });
+
+auth.startTimer();
 
 async function api(path, { method = 'GET', body, auth: useAuth = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
@@ -21,8 +51,7 @@ async function api(path, { method = 'GET', body, auth: useAuth = true } = {}) {
   });
 
   if (res.status === 401 && useAuth) {
-    auth.set(null);
-    auth.onUnauthorized();
+    auth.logout();
     throw new Error('Session expired. Login required.');
   }
   if (!res.ok) {

@@ -14,22 +14,35 @@ const UserLogin = {
         const data = await api('/auth/login', {
           method: 'POST', body: { ...credentials }, auth: false,
         });
-        auth.set(data.accessToken);
+        auth.login(data.accessToken, credentials.username, Date.now() + data.expiresIn * 1000);
         credentials.password = '';
-        state.username = credentials.username;
         state.page = 'home';
       } catch (e) {
         error.value = e.message;
       }
     }
-    return { credentials, error, login };
+    return { error, login, credentials };
   }
 };
 
 const UserChangePassword = {
   template: '#tpl-user-change-password',
   setup() {
+    const passwords = reactive({currentPassword: '', newPassword: ''});
+    const error = ref('');
 
+    async function changePassword() {
+      try {
+        const data = await api('/auth/password', {
+          method: 'PUT', body: { ...passwords }, auth: true,
+        });
+        auth.logout();
+        state.page = 'home';
+      } catch (e) {
+        error.value = e.message;
+      }
+    }
+    return { error, changePassword, passwords };
   }
 };
 
@@ -62,14 +75,7 @@ const app = createApp({
     const saving = ref(false);
     const error = ref('');
 
-    auth.onUnauthorized = () => { state.username = ''; state.page = 'user-login'; };
-
-    function logout() {
-      auth.token = null;
-      token.value = null;
-      items.value = [];
-      page.value = 'home';
-    }
+    auth.onLogout = () => { state.page = 'home'; };
 
     // async function loadItems() {
     //   loading.value = true;
@@ -96,12 +102,12 @@ const app = createApp({
     //   }
     // }
 
-    onMounted(() => { if (isAuthenticated.value) loadItems(); });
+    onMounted(() => {  });
 
     return {
       state, isAuthenticated, 
       loading, saving, error,
-      logout
+      auth, logout: () => auth.logout()
     };
   },
 })

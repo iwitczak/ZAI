@@ -61,8 +61,14 @@ MIDDLEWARE = [
 from django.utils.csp import CSP
 SECURE_CSP = {
     "default-src": [CSP.SELF],
-    "img-src": [CSP.SELF],
-    "frame-src": [CSP.NONE],
+    "script-src": [CSP.SELF, CSP.UNSAFE_EVAL],   # unsafe-eval for Vue
+    "style-src": [CSP.SELF],
+    "img-src": [CSP.SELF, "data:"],              # ECharts/Tabulator
+    "font-src": [CSP.SELF],
+    "connect-src": [CSP.SELF],                   
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+    "frame-ancestors": [CSP.SELF],
 }
 
 ROOT_URLCONF = 'ZAI.urls'
