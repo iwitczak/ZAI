@@ -287,7 +287,7 @@ class MeasurementView(APIView):
                     status=400, 
                     errors=dict(serializer.errors)
                 ).get_response()
-            time_to = time_serializer.validated_data['date_from']  # type: ignore
+            time_to = serializer.validated_data['timestamp']  # type: ignore
         elif r_time_from is not None:
             serializer = TimestampSerializer(data = {'timestamp': r_time_from})
             if not serializer.is_valid():
@@ -297,7 +297,7 @@ class MeasurementView(APIView):
                     status=400, 
                     errors=dict(serializer.errors)
                 ).get_response()
-            time_from = time_serializer.validated_data['date_from']  # type: ignore
+            time_from = serializer.validated_data['timestamp']  # type: ignore
             
 
         # Model query
