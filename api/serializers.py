@@ -22,6 +22,7 @@ class SensorSerializer(serializers.Serializer):
     lastMeasurementAt = serializers.DateTimeField(
         source="last_measurement_at", default=None, allow_null=True
     )
+    isActive = serializers.BooleanField(source="is_active")
 
 
 class MeasurementSerializer(serializers.Serializer):

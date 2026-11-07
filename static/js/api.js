@@ -40,6 +40,16 @@ const auth = Vue.reactive({
 
 auth.startTimer();
 
+class ApiError extends Error {
+  constructor(status, problem) {
+    super(problem?.detail || problem?.title || `Błąd ${status}`);
+    this.name = 'ApiError';
+    this.status = status;
+    this.problem = problem;                 
+    this.errors = problem?.errors ?? {};
+  }
+}
+
 async function api(path, { method = 'GET', body, auth: useAuth = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (useAuth && auth.token) headers['Authorization'] = `Bearer ${auth.token}`;
@@ -55,8 +65,8 @@ async function api(path, { method = 'GET', body, auth: useAuth = true } = {}) {
     throw new Error('Session expired. Login required.');
   }
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || `Error ${res.status}`);
+    const data = await res.json().catch(() => null);
+    throw new ApiError(res.status, data);
   }
   return res.status === 204 ? null : res.json();
 }
