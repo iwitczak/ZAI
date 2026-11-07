@@ -90,7 +90,45 @@
 
   <template id="tpl-home">
     <div class="view-fill">
-    
+      <h1>Measurements</h1>
+      <div>
+        <button class="btn btn-sm btn-secondary" type="button" :disabled="loading" data-bs-toggle="modal" data-bs-target="#measurementsFilterModal">
+          Filters
+        </button>
+        <button class="btn btn-sm btn-secondary mx-3" type="button" :disabled="loading" @click.prevent="getMeasurements">
+          Refresh
+        </button>
+      </div>
+
+      <!-- Modal Filter -->
+      <div class="modal modal-fullscreen-sm-down fade" id="measurementsFilterModal" tabindex="-1" aria-labelledby="measurementsFilterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="measurementsFilterModalLabel">Filter Measurements</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="form-filter-measurements" @submit.prevent="getMeasurements">
+                 
+                  <label for="inp-measurements-time-from">Time from</label>
+                  <input class="form-control mb-3" v-model="measurementsFilterData.from" type="datetime-local" name="Measurements Time From" id="inp-measurements-time-from"/>
+                  <label for="inp-measurements-time-to">Time to</label>
+                  <input class="form-control mb-3" v-model="measurementsFilterData.to" type="datetime-local" name="Measurements Time To" id="inp-measurements-time-to"/>
+                  <label for="inp-measurements-series-id">Series</label>
+                  <input class="form-control mb-3" v-model="measurementsFilterData.series" type="text" name="Measurements from Series ids" id="inp-measurements-series-id"/>
+                  <div class="mt-3" v-if="measurementsFilterError != ''">{{ measurementsFilterError }} {{ measurementsFilterErrorValues }}</div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" form="form-filter-measurements" class="btn btn-primary">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+
     </div>
   </template>
 

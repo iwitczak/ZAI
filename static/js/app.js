@@ -1,7 +1,42 @@
 const { createApp, ref, reactive, computed, onMounted, onBeforeUnmount } = Vue;
 
 // Page components
-const Home = {template: '#tpl-home'};
+const Home = {
+  template: '#tpl-home',
+  setup() {
+    const measurementsFilterError = ref('');
+    const measurementsFilterErrorValues = ref('');
+    const loading = ref(false);
+
+    const measurementsData = reactive([]);
+    const measurementsFilterData = reactive({"from": "", "to": "", "series": ""});
+
+    const isAuthenticated = computed(() => !!auth.token);
+
+    async function getMeasurements() {
+      loading.value = true;
+      try {
+        measurementsData.value = api(
+          path = '/measurements',
+          {method: 'GET', params: measurementsFilterData, auth: false}
+        );
+        console.log(measurementsData);
+      } catch (e) {
+        measurementsFilterError.value = e;
+        measurementsFilterErrorValues.value = e?.errors;
+      } finally {
+        loading.value = false;
+      }
+    }
+
+    return {
+      measurementsFilterError, measurementsFilterErrorValues, loading, isAuthenticated,
+      measurementsData, measurementsFilterData,
+      getMeasurements
+    }
+  }
+
+};
 
 const UserLogin = {
   template: '#tpl-user-login',

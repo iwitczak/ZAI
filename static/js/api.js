@@ -50,11 +50,22 @@ class ApiError extends Error {
   }
 }
 
-async function api(path, { method = 'GET', body, auth: useAuth = true } = {}) {
+async function api(path, { method = 'GET', body, params, auth: useAuth = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (useAuth && auth.token) headers['Authorization'] = `Bearer ${auth.token}`;
 
-  const res = await fetch(API_BASE + path, {
+  let url = API_BASE + path;
+
+  if (params) {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v != null && v !== '')
+    ).toString();
+    if (qs) url += (path.includes('?') ? '&' : '?') + qs;
+  }
+  
+  console.log(url);
+
+  const res = await fetch(url, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
