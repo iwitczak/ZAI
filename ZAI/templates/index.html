@@ -127,8 +127,39 @@
         </div>
       </div>
 
-      
+      <div class="measurement-view-row">
+        <!-- Chart -->
+        <div class="measurement-chart">
+            Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+        </div>
+        <!-- Table -->
+        <div class="measurement-table">
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Series ID</th>
+                  <th scope="col">Sensor ID</th>
+                  <th scope="col">Value</th>
+                  <th scope="col">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="m in measurementsData ?? []" :key="m.id">
+                  <td>{{ m.id }}</td>
+                  <td>{{ m.seriesId }}</td>
+                  <td>{{ m.sensorId }}</td>
+                  <td>{{ m.value }}</td>
+                  <td>{{ m.timestamp }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      </div>
     </div>
   </template>
 

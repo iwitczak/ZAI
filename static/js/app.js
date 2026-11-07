@@ -8,7 +8,7 @@ const Home = {
     const measurementsFilterErrorValues = ref('');
     const loading = ref(false);
 
-    const measurementsData = reactive([]);
+    const measurementsData = ref([]);
     const measurementsFilterData = reactive({"from": "", "to": "", "series": ""});
 
     const isAuthenticated = computed(() => !!auth.token);
@@ -16,7 +16,7 @@ const Home = {
     async function getMeasurements() {
       loading.value = true;
       try {
-        measurementsData.value = api(
+        measurementsData.value = await api(
           path = '/measurements',
           {method: 'GET', params: measurementsFilterData, auth: false}
         );
