@@ -33,7 +33,7 @@ class MeasurementSerializer(serializers.Serializer):
     seriesId = serializers.IntegerField(source="sensor.series_id")
     seriesIcon = serializers.CharField(source="series_icon", allow_null = True)
     seriesUnit = serializers.CharField(source="series_unit", allow_null = True)
-    seriesColor = serializers.CharField(source="series_color")
+    seriesColor = serializers.CharField(source="series_color", allow_null = True)
 
 
 class TimestampSerializer(serializers.Serializer):
