@@ -3,6 +3,7 @@ import secrets
 
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django.db.models import F
 from django.db.models.aggregates import Max, Min
 from django.utils.timezone import now
 
@@ -123,6 +124,12 @@ class Measurement(models.Model):
             queryset = queryset.filter(timestamp__gte=from_timestamp)
         if to_timestamp is not None:
             queryset = queryset.filter(timestamp__lte=to_timestamp)
+
+        queryset = queryset.annotate(
+            series_icon=F("sensor__series__icon"),
+            series_color=F("sensor__series__color"),
+            series_unit=F("sensor__series__unit"),
+            )
 
         return queryset.order_by(order_by)[:limit]
 

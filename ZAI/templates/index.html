@@ -129,8 +129,8 @@
 
       <div class="measurement-view-row">
         <!-- Chart -->
-        <div class="measurement-chart">
-            Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        <div ref="chartElement" class="measurement-chart">
+
 
         </div>
         <!-- Table -->
@@ -151,7 +151,7 @@
                   <td>{{ m.id }}</td>
                   <td>{{ m.seriesId }}</td>
                   <td>{{ m.sensorId }}</td>
-                  <td>{{ m.value }}</td>
+                  <td>{{ m.value }} {{ m?.seriesUnit }}</td>
                   <td>{{ m.timestamp }}</td>
                 </tr>
               </tbody>
@@ -357,11 +357,11 @@
   </template>
   {% endverbatim %}
 
+  <script src="{% static 'vendor/js/echarts.min.js' %}"></script>
   <script src="{% static 'vendor/js/vue.global.js' %}"></script>
   <script src="{% static 'js/api.js' %}"></script>
   <script src="{% static 'js/state.js' %}"></script>
   <script src="{% static 'js/app.js' %}"></script>
-  <script src="{% static 'vendor/js/echarts.min.js' %}"></script>
-  <script src="{% static 'vendor/js/tabulator.min.js' %}"></script>
+  
 </body>
 </html>

@@ -13,6 +13,114 @@ const Home = {
 
     const isAuthenticated = computed(() => !!auth.token);
 
+    // CHART
+    const chartElement = ref(null);
+    let chart = null;
+    let resizeObserver = null;
+
+    const WINDOW_MS = 60 * 60 * 1000; // 60 minutes
+    let initialized = false;
+
+    function renderChart() {
+      if (!chart) return;
+      const data = measurementsData.value ?? [];
+
+      const BUILTIN_SYMBOLS = ['circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow'];
+      const legendData = [];
+      function resolveSymbol(icon) {
+        if (!icon || typeof icon !== 'string') return null;
+        if (BUILTIN_SYMBOLS.includes(icon)) return icon;
+        return null;
+      }
+
+      const groups = new Map();
+      for (const m of data) {
+        if (!groups.has(m.seriesId)) groups.set(m.seriesId, []);
+        groups.get(m.seriesId).push(m);
+      }
+
+      const series = [...groups].map(([seriesId, items]) => {
+        const sorted = [...items].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const color = sorted[0]?.seriesColor;
+        const icon = resolveSymbol(sorted[0]?.seriesIcon);
+        const name = `Series ${seriesId}`;
+        legendData.push(icon ? { name, icon } : { name });
+        return {
+        name: name,
+        type: 'line',
+        symbol: icon,
+        symbolSize: 8,
+        itemStyle: { color },
+        lineStyle: { color },
+        data: items
+          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+          .map(m => ({ value: [m.timestamp, m.value], id: m.id, ts: m.timestamp })),
+        emphasis: { focus: 'series' },
+        }
+      });
+
+      const option = {
+        tooltip: { 
+          trigger: 'axis' ,
+          confine: true, 
+          formatter: (params) => {
+            const time = params[0].data.ts;
+            const rows = params.map(p =>
+              `${p.marker} ${p.seriesName}: <b>${p.value[1]}</b>`
+            ).join('<br>');
+            return `${time}<br>${rows}`;
+          },
+        },
+        legend: { type: 'scroll', bottom: 0, data: legendData },
+        grid: { bottom: 80 },
+        xAxis: { type: 'time', minInterval: 60 * 1000 },
+        yAxis: { type: 'value' },
+        dataZoom: [
+          {
+            type: 'inside',
+            zoomLock: false,
+            filterMode: 'none',
+            minValueSpan: WINDOW_MS/60,
+            maxValueSpan: WINDOW_MS*24,
+          },
+          {
+            type: 'slider',
+            zoomLock: false,
+            filterMode: 'none',
+            bottom: 35,
+            minValueSpan: WINDOW_MS/60,
+            maxValueSpan: WINDOW_MS*24,
+          },
+        ],
+        series,
+      };
+
+      // Initial window size
+      if (!initialized && data.length) {
+        const end = data.reduce((mx, m) => Math.max(mx, new Date(m.timestamp).getTime()), 0);
+        option.dataZoom.forEach(z => { z.endValue = end; z.startValue = end - WINDOW_MS; });
+        initialized = true;
+      }
+
+      chart.setOption(option, { replaceMerge: ['series'] });
+    }
+
+    onMounted(() => {
+      chart = echarts.init(chartElement.value);
+      renderChart();
+      resizeObserver = new ResizeObserver(() => chart?.resize());
+      resizeObserver.observe(chartElement.value);
+      getMeasurements();
+    });
+
+    Vue.watch(measurementsData, renderChart);
+
+    onBeforeUnmount(() => {
+      resizeObserver?.disconnect();
+      chart?.dispose();
+    });
+    // // CHART
+
     async function getMeasurements() {
       loading.value = true;
       try {
@@ -32,7 +140,8 @@ const Home = {
     return {
       measurementsFilterError, measurementsFilterErrorValues, loading, isAuthenticated,
       measurementsData, measurementsFilterData,
-      getMeasurements
+      getMeasurements, 
+      chartElement
     }
   }
 
