@@ -63,9 +63,15 @@
     <section v-if="!isAuthenticated">
       <h1>Log in</h1>
       <form @submit.prevent="login">
-        <input v-model="credentials.username" placeholder="Login" required>
-        <input v-model="credentials.password" type="password" placeholder="Password" required>
-        <button type="submit" :disabled="saving">Log in</button>
+        <div class="mb-3">
+          <label class="login-label" for="inp-login-username">Username</label>
+          <input id="inp-login-username" v-model="credentials.username" class="mx-3 input" placeholder="Username" required>
+        </div>
+        <div class="mb-3">
+          <label class="login-label" for="inp-login-password">Password</label>
+          <input id="inp-login-password" v-model="credentials.password" class="mx-3 input" type="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-sm btn-secondary" :disabled="saving">Log in</button>
       </form>
       <p v-if="error" class="error">{{ error }}</p>
     </section>
@@ -77,9 +83,15 @@
     <section v-if="!isAuthenticated">
       <h1>Change password</h1>
       <form @submit.prevent="changePassword">
-        <input v-model="passwords.currentPassword" type="password" placeholder="Current password" required>
-        <input v-model="passwords.newPassword" type="password" placeholder="New Password" required>
-        <button type="submit" :disabled="saving">Change password</button>
+        <div class="mb-3">
+          <label class="change-password-label" for="inp-change-password-current">Current password</label>
+          <input id="inp-change-password-current" class="mx-3 input" v-model="passwords.currentPassword" type="password" placeholder="Current password" required>
+        </div>
+        <div class="mb-3">
+          <label class="change-password-label" for="inp-login-password">New password</label>
+          <input id="inp-change-password-new" v-model="passwords.newPassword" class="mx-3 input" type="password" placeholder="New Password" required>
+        </div>
+        <button type="submit" class="btn btn-sm btn-secondary" :disabled="saving">Change password</button>
       </form>
       <p v-if="error" class="error">{{ error }}</p>
     </section>

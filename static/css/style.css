@@ -63,6 +63,14 @@ html, body {
   }
 }
 
+.login-label {
+    width: 6rem;
+}
+
+.change-password-label {
+    width: 10rem;
+}
+
 .padding-lr-1 {
     padding-left: 1rem;
     padding-right: 1rem;
