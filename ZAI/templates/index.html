@@ -71,7 +71,7 @@
           <label class="login-label" for="inp-login-password">Password</label>
           <input id="inp-login-password" v-model="credentials.password" class="mx-3 input" type="password" placeholder="Password" required>
         </div>
-        <button type="submit" class="btn btn-sm btn-secondary" :disabled="saving">Log in</button>
+        <button type="submit" class="btn btn-sm btn-secondary">Log in</button>
       </form>
       <p v-if="error" class="error">{{ error }}</p>
     </section>
@@ -80,7 +80,7 @@
 
 
   <template id="tpl-user-change-password">
-    <section v-if="!isAuthenticated">
+    <section v-if="isAuthenticated">
       <h1>Change password</h1>
       <form @submit.prevent="changePassword">
         <div class="mb-3">
@@ -91,7 +91,7 @@
           <label class="change-password-label" for="inp-login-password">New password</label>
           <input id="inp-change-password-new" v-model="passwords.newPassword" class="mx-3 input" type="password" placeholder="New Password" required>
         </div>
-        <button type="submit" class="btn btn-sm btn-secondary" :disabled="saving">Change password</button>
+        <button type="submit" class="btn btn-sm btn-secondary">Change password</button>
       </form>
       <p v-if="error" class="error">{{ error }}</p>
     </section>

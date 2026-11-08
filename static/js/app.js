@@ -170,7 +170,7 @@ const Home = {
     return {
       measurementsFilterError, measurementsFilterErrorValues, loading, isAuthenticated,
       measurementsData, measurementsFilterData,
-      getMeasurements, selectRow, 
+      getMeasurements, selectRow, selectedId, 
       chartElement
     }
   }
@@ -182,6 +182,7 @@ const UserLogin = {
   setup() {
     const credentials = reactive({username: '', password: ''});
     const error = ref('');
+    const isAuthenticated = computed(() => !!auth.token);
 
     async function login() {
       try {
@@ -195,7 +196,7 @@ const UserLogin = {
         error.value = e.message;
       }
     }
-    return { error, login, credentials };
+    return { error, login, credentials, isAuthenticated };
   }
 };
 
@@ -204,6 +205,7 @@ const UserChangePassword = {
   setup() {
     const passwords = reactive({currentPassword: '', newPassword: ''});
     const error = ref('');
+    const isAuthenticated = computed(() => !!auth.token);
 
     async function changePassword() {
       try {
@@ -216,7 +218,7 @@ const UserChangePassword = {
         error.value = e.message;
       }
     }
-    return { error, changePassword, passwords };
+    return { error, changePassword, passwords, isAuthenticated };
   }
 };
 

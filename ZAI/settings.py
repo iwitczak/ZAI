@@ -63,6 +63,7 @@ SECURE_CSP = {
     "default-src": [CSP.SELF],
     "script-src": [CSP.SELF, CSP.UNSAFE_EVAL],   # unsafe-eval for Vue
     "style-src": [CSP.SELF],
+    "style-src-attr": [CSP.UNSAFE_INLINE],      # ECharts tooltip exception
     "img-src": [CSP.SELF, "data:"],              # ECharts/Tabulator
     "font-src": [CSP.SELF],
     "connect-src": [CSP.SELF],                   
