@@ -76,6 +76,8 @@ html, body {
     padding-right: 1rem;
 }
 
+.row-clickable { cursor: pointer; }
+
 .navbar-text {
     font-size: 1rem;
     padding: 0.375rem 0.75rem 0.375rem 0.75rem;

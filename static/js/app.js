@@ -13,6 +13,10 @@ const Home = {
 
     const isAuthenticated = computed(() => !!auth.token);
 
+    // TABLE
+    const selectedId = ref(null);
+    let indexById = new Map();
+
     // CHART
     const chartElement = ref(null);
     let chart = null;
@@ -33,14 +37,17 @@ const Home = {
         return null;
       }
 
+      indexById = new Map();
+
       const groups = new Map();
       for (const m of data) {
         if (!groups.has(m.seriesId)) groups.set(m.seriesId, []);
         groups.get(m.seriesId).push(m);
       }
 
-      const series = [...groups].map(([seriesId, items]) => {
+      const series = [...groups].map(([seriesId, items], seriesIndex) => {
         const sorted = [...items].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        sorted.forEach((m, dataIndex) => indexById.set(m.id, {seriesIndex, dataIndex}))
         const color = sorted[0]?.seriesColor;
         const icon = resolveSymbol(sorted[0]?.seriesIcon);
         const name = `Series ${seriesId}`;
@@ -55,7 +62,11 @@ const Home = {
         data: items
           .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
           .map(m => ({ value: [m.timestamp, m.value], id: m.id, ts: m.timestamp })),
-        emphasis: { focus: 'series' },
+        emphasis: {
+          focus: 'self',
+          scale: 1.8,
+          itemStyle: { borderWidth: 3, borderColor: '#000' },
+        },
         }
       });
 
@@ -105,6 +116,25 @@ const Home = {
       chart.setOption(option, { replaceMerge: ['series'] });
     }
 
+    function selectRow(m) {
+      const pos = indexById.get(m.id);
+      if (!pos || !chart) return;
+
+      selectedId.value = m.id;
+
+      // Move window if record not in view
+      const t = new Date(m.timestamp).getTime();
+      chart.dispatchAction({
+        type: 'dataZoom',
+        startValue: t - WINDOW_MS / 2,
+        endValue: t + WINDOW_MS / 2,
+      });
+
+      chart.dispatchAction({ type: 'downplay' });
+      chart.dispatchAction({ type: 'highlight', ...pos });
+      chart.dispatchAction({ type: 'showTip', ...pos });
+    }
+
     onMounted(() => {
       chart = echarts.init(chartElement.value);
       renderChart();
@@ -140,7 +170,7 @@ const Home = {
     return {
       measurementsFilterError, measurementsFilterErrorValues, loading, isAuthenticated,
       measurementsData, measurementsFilterData,
-      getMeasurements, 
+      getMeasurements, selectRow, 
       chartElement
     }
   }
