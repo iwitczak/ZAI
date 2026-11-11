@@ -78,11 +78,14 @@ html, body {
 
 .row-clickable { cursor: pointer; }
 
-.navbar-text {
-    font-size: 1rem;
-    padding: 0.375rem 0.75rem 0.375rem 0.75rem;
+.navbar-nav .navbar-text {
+    padding-top: var(--bs-nav-link-padding-y);
+    padding-bottom: var(--bs-nav-link-padding-y);
+    padding-left: var(--bs-nav-link-padding-x);
+    padding-right: var(--bs-nav-link-padding-x);
+    margin-right: 0;
+    font-size: var(--bs-nav-link-font-size);
     line-height: 1.5;
-    margin-right: 0.5rem;
 }
 
 .table-scroll {

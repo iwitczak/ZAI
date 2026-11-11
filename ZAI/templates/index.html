@@ -26,8 +26,8 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         
-        <div class="collapse navbar-collapse inline-flex justify-content-between" id="navbarContent">
-          <ul class="navbar-nav mr-auto">
+        <div class="collapse navbar-collapse" id="navbarContent">
+          <ul class="navbar-nav me-auto">
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" href="#" @click.prevent="state.page = 'home'">Visualize</a>
             </li>
@@ -39,11 +39,17 @@
             </li>
           </ul>
 
-          <div id="navbar-auth-div">
+          <div id="navbar-auth-div" class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center" >
             <template v-if="isAuthenticated">
-              <button id="btn-change-password" type="button" class="btn" @click.prevent="state.page = 'user-change-password'">Change Password</button>
-              <button id="btn-logout" type="button" class="btn" @click.prevent="logout">Logout</button>
-              <span class="navbar-text">Welcome, {{ auth?.username ?? '' }}</span>
+              <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                  <button id="btn-change-password" type="button" class="nav-link" @click.prevent="state.page = 'user-change-password'">Change Password</button>
+                </li>
+                <li class="nav-item">
+                  <button id="btn-logout" type="button" class="nav-link" @click.prevent="logout">Logout</button>
+                </li>
+                <span class="navbar-text">Welcome {{ auth?.username ?? '' }}</span>
+              </ul>
             </template>
             
             <template v-else>
@@ -124,9 +130,9 @@
               <form id="form-filter-measurements" @submit.prevent="getMeasurements">
                  
                   <label for="inp-measurements-time-from">Time from</label>
-                  <input class="form-control mb-3" v-model="measurementsFilterData.from" type="datetime-local" name="Measurements Time From" id="inp-measurements-time-from"/>
+                  <input class="form-control mb-3" v-model="measurementsFilterData.from" type="datetime-local" name="Measurements Time From" id="inp-measurements-time-from" @keydown.enter.prevent="getMeasurements"/>
                   <label for="inp-measurements-time-to">Time to</label>
-                  <input class="form-control mb-3" v-model="measurementsFilterData.to" type="datetime-local" name="Measurements Time To" id="inp-measurements-time-to"/>
+                  <input class="form-control mb-3" v-model="measurementsFilterData.to" type="datetime-local" name="Measurements Time To" id="inp-measurements-time-to" @keydown.enter.prevent="getMeasurements"/>
                   <label for="inp-measurements-series-id">Series</label>
                   <input class="form-control mb-3" v-model="measurementsFilterData.series" type="text" name="Measurements from Series ids" id="inp-measurements-series-id"/>
                   <div class="mt-3" v-if="measurementsFilterError != ''">{{ measurementsFilterError }} {{ measurementsFilterErrorValues }}</div>
@@ -204,7 +210,8 @@
                   <input class="form-control mb-3" v-model="newSensorData.name" type="text" name="Sensor Name" id="inp-sensor-name"/>
                   <label for="inp-sensor-series-id">Series ID</label>
                   <input class="form-control" v-model="newSensorData.seriesId" type="number" step="1" name="Sensor Series ID" id="inp-sensor-series-id"/>
-                  <div class="mt-3" v-if="newSensorAddError != ''">{{ newSensorAddError }} {{ newSensorAddErrorValues }}</div>
+                  <div class="mt-3 red-text" v-if="newSensorAddError != ''">{{ newSensorAddError }}</div>
+                  <div class="mt-3" v-if="Object.keys(newSensorAddErrorValues).length">{{ newSensorAddErrorValues }}</div>
                   <div class="mt-3" v-if="newSensorKey != ''">API Key (only visible once): {{ newSensorKey }}</div>
               </form>
             </div>
@@ -285,7 +292,8 @@
                   <input class="form-control mb-3" v-model="newSeriesData.icon" type="text" name="Series icon" id="inp-series-icon"/>
                   <label for="inp-series-max-value">Unit</label>
                   <input class="form-control mb-3" v-model="newSeriesData.unit" type="text" name="Series unit" id="inp-series-unit"/>
-                  <div class="mt-3" v-if="newSeriesAddError != ''">{{ newSeriesAddError }} {{ newSeriesAddErrorValues }}</div>
+                  <div class="mt-3 red-text" v-if="newSeriesAddError != ''">{{ newSeriesAddError }}</div>
+                  <div class="mt-3" v-if="Object.keys(newSeriesAddErrorValues).length">{{ newSeriesAddErrorValues }}</div>
                   <div class="mt-3" v-if="newSeriesId != ''">Success - new Series ID: {{ newSeriesId }}</div>
                   
               </form>
@@ -359,7 +367,7 @@
                 <button class="btn btn-sm btn-warning" type="button" :disabled="loading" @click="openEditModal(s)">
                   Edit
                 </button>
-                <button class="btn btn-sm btn-danger mx-2" type="button" @click.prevent="deleteSeries(s.id)">
+                <button class="btn btn-sm btn-danger mx-2" type="button" :disabled="loading" @click.prevent="deleteSeries(s.id)">
                   Delete
                 </button>
               </td>

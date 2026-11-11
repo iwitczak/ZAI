@@ -363,6 +363,8 @@ const ManageSeries = {
     async function addSeries() {
       loading.value = true;
       newSeriesAddError.value = '';
+      newSeriesId.value = '';
+      newSeriesAddErrorValues.value = {};
       
       body = {
         "name": newSeriesData.name,
@@ -371,6 +373,12 @@ const ManageSeries = {
         "color": newSeriesData.color,
         "unit": newSeriesData.unit?.trim() || undefined,
         "icon": newSeriesData.icon?.trim() || undefined,
+      }
+
+      if (body.minValue >= body.maxValue) {
+        newSeriesAddError.value = "Min Value must be lower than Max Value";
+        loading.value = false;
+        return;
       }
 
       try {
@@ -399,6 +407,7 @@ const ManageSeries = {
     async function editSeries(id) {
       loading.value = true;
       editSeriesAddError.value = '';
+      editSeriesAddErrorValues.value = {};
       editSeriesSuccess.value = false;
 
       body = {
