@@ -182,9 +182,11 @@ const UserLogin = {
   setup() {
     const credentials = reactive({username: '', password: ''});
     const error = ref('');
+    const loading = ref(false);
     const isAuthenticated = computed(() => !!auth.token);
 
     async function login() {
+      loading.value = true;
       try {
         const data = await api('/auth/login', {
           method: 'POST', body: { ...credentials }, auth: false,
@@ -194,9 +196,11 @@ const UserLogin = {
         state.page = 'home';
       } catch (e) {
         error.value = e.message;
+      } finally {
+        loading.value = false;
       }
     }
-    return { error, login, credentials, isAuthenticated };
+    return { error, login, credentials, isAuthenticated, loading };
   }
 };
 
@@ -205,9 +209,11 @@ const UserChangePassword = {
   setup() {
     const passwords = reactive({currentPassword: '', newPassword: ''});
     const error = ref('');
+    const loading = ref(false);
     const isAuthenticated = computed(() => !!auth.token);
 
     async function changePassword() {
+      loading.value = true;
       try {
         const data = await api('/auth/password', {
           method: 'PUT', body: { ...passwords }, auth: true,
@@ -216,9 +222,11 @@ const UserChangePassword = {
         state.page = 'home';
       } catch (e) {
         error.value = e.message;
+      } finally {
+        loading.value = false;
       }
     }
-    return { error, changePassword, passwords, isAuthenticated };
+    return { error, changePassword, passwords, isAuthenticated, loading };
   }
 };
 
