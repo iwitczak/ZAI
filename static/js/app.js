@@ -25,6 +25,36 @@ const Home = {
     const WINDOW_MS = 60 * 60 * 1000; // 60 minutes
     let initialized = false;
 
+    const printImage = ref(null); // <img ref="printImage">
+    const printing = ref(false);
+
+    function onBeforePrint() {
+      if (!chart) return;
+      chart.setOption({
+        animation: false,
+        dataZoom: [{}, { show: false }],
+        grid: { bottom: 40 },
+      });
+      chart.resize({ width: 1000, height: 400, animation: { duration: 0 } });
+      printImage.value.src = chart.getDataURL({
+        type: 'png',
+        pixelRatio: 2,
+        backgroundColor: '#fff',
+      });
+      printing.value = true;
+    }
+
+    function onAfterPrint() {
+      printing.value = false;
+      if (!chart) return;
+      chart.setOption({
+        animation: true,
+        dataZoom: [{}, { show: true }],
+        grid: { bottom: 80 },
+      });
+      chart.resize({ width: 'auto', height: 'auto', animation: { duration: 0 } });
+    }
+
     function renderChart() {
       if (!chart) return;
       const data = measurementsData.value ?? [];
@@ -59,8 +89,7 @@ const Home = {
         symbolSize: 8,
         itemStyle: { color },
         lineStyle: { color },
-        data: items
-          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+        data: sorted
           .map(m => ({ value: [m.timestamp, m.value], id: m.id, ts: m.timestamp })),
         emphasis: {
           focus: 'self',
@@ -140,6 +169,10 @@ const Home = {
       renderChart();
       resizeObserver = new ResizeObserver(() => chart?.resize());
       resizeObserver.observe(chartElement.value);
+
+      window.addEventListener('beforeprint', onBeforePrint);
+      window.addEventListener('afterprint', onAfterPrint);
+
       getMeasurements();
     });
 
@@ -147,6 +180,8 @@ const Home = {
 
     onBeforeUnmount(() => {
       resizeObserver?.disconnect();
+      window.removeEventListener('beforeprint', onBeforePrint);
+      window.removeEventListener('afterprint', onAfterPrint);
       chart?.dispose();
     });
     // // CHART
@@ -171,7 +206,7 @@ const Home = {
       measurementsFilterError, measurementsFilterErrorValues, loading, isAuthenticated,
       measurementsData, measurementsFilterData,
       getMeasurements, selectRow, selectedId, 
-      chartElement
+      chartElement, printing, printImage
     }
   }
 

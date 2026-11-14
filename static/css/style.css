@@ -34,8 +34,16 @@ html, body {
     flex-direction: row;
 }
 
+.measurement-chart-wrap { 
+    width: 50%; 
+}
+
+.measurement-chart-print {
+    display: none; 
+}
+
 .measurement-chart {
-    width: 50%;
+    width: 100%;
     min-height: 300px;
     height: 100%;
 }
@@ -51,16 +59,19 @@ html, body {
         display: flex;
         flex-direction: column;
     }
-  .measurement-chart {
-    width: 100%;
-    height: 50%;
-    min-height: 300px;
-  }
-  .measurement-table {
-    width: 100%;
-    height: 50%;
-    display: flex;
-  }
+    .measurement-chart-wrap { 
+        width: 100%; 
+    }
+    .measurement-chart {
+        width: 100%;
+        height: 50%;
+        min-height: 300px;
+    }
+    .measurement-table {
+        width: 100%;
+        height: 50%;
+        display: flex;
+    }
 }
 
 .login-label {
@@ -117,4 +128,26 @@ html, body {
   padding: 8px 12px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+
+
+@media print {
+    header, nav, .no-print, .btn, h1 {
+        display: none !important;
+    }
+
+    .measurement-chart-wrap {
+        width: 100%;
+        margin-bottom: 20px;
+        break-inside: avoid;
+    }
+    .measurement-chart {
+        display: none !important; 
+    }
+
+    .measurement-chart-print {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
 }
