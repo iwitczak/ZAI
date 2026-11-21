@@ -75,12 +75,12 @@
       <h1>Log in</h1>
       <form @submit.prevent="login">
         <div class="mb-3">
-          <label class="login-label" for="inp-login-username">Username</label>
-          <input id="inp-login-username" v-model="credentials.username" class="mx-3 input" placeholder="Username" required>
+          <label class="login-label me-3" for="inp-login-username">Username</label>
+          <input id="inp-login-username" v-model="credentials.username" class="input" placeholder="Username" required>
         </div>
         <div class="mb-3">
-          <label class="login-label" for="inp-login-password">Password</label>
-          <input id="inp-login-password" v-model="credentials.password" class="mx-3 input" type="password" placeholder="Password" required>
+          <label class="login-label me-3" for="inp-login-password">Password</label>
+          <input id="inp-login-password" v-model="credentials.password" class="input" type="password" placeholder="Password" required>
         </div>
         <button type="submit" class="btn btn-sm btn-secondary">Log in</button>
       </form>
@@ -100,12 +100,12 @@
       <h1>Change password</h1>
       <form @submit.prevent="changePassword">
         <div class="mb-3">
-          <label class="change-password-label" for="inp-change-password-current">Current password</label>
-          <input id="inp-change-password-current" class="mx-3 input" v-model="passwords.currentPassword" type="password" placeholder="Current password" required>
+          <label class="change-password-label me-3" for="inp-change-password-current">Current password</label>
+          <input id="inp-change-password-current" class="input" v-model="passwords.currentPassword" type="password" placeholder="Current password" required>
         </div>
         <div class="mb-3">
-          <label class="change-password-label" for="inp-login-password">New password</label>
-          <input id="inp-change-password-new" v-model="passwords.newPassword" class="mx-3 input" type="password" placeholder="New Password" required>
+          <label class="change-password-label me-3" for="inp-login-password">New password</label>
+          <input id="inp-change-password-new" v-model="passwords.newPassword" class="input" type="password" placeholder="New Password" required>
         </div>
         <button type="submit" class="btn btn-sm btn-secondary">Change password</button>
       </form>
@@ -126,10 +126,10 @@
 
       <h1>Measurements</h1>
       <div>
-        <button class="btn btn-sm btn-secondary" type="button" :disabled="loading" data-bs-toggle="modal" data-bs-target="#measurementsFilterModal">
+        <button class="btn btn-sm btn-secondary me-3" type="button" :disabled="loading" data-bs-toggle="modal" data-bs-target="#measurementsFilterModal">
           Filters
         </button>
-        <button class="btn btn-sm btn-secondary mx-3" type="button" :disabled="loading" @click.prevent="getMeasurements">
+        <button class="btn btn-sm btn-secondary" type="button" :disabled="loading" @click.prevent="getMeasurements">
           Refresh
         </button>
       </div>
@@ -212,10 +212,10 @@
     <div class="view-fill">
       <h1>Sensors</h1>
       <div>
-        <button class="btn btn-sm btn-secondary" type="button" :disabled="loading" @click.prevent="getSensors">
+        <button class="btn btn-sm btn-secondary me-3" type="button" :disabled="loading" @click.prevent="getSensors">
           Get data
         </button>
-        <button class="btn btn-sm btn-secondary mx-3" type="button" :disabled="loading" data-bs-toggle="modal" data-bs-target="#registerSensorModal">
+        <button class="btn btn-sm btn-secondary" type="button" :disabled="loading" data-bs-toggle="modal" data-bs-target="#registerSensorModal">
           Register new
         </button>
       </div>
@@ -290,10 +290,10 @@
     <div class="view-fill">
       <h1>Series</h1>
       <div>
-        <button class="btn btn-sm btn-secondary" type="button" :disabled="loading" @click.prevent="getSeries">
+        <button class="btn btn-sm btn-secondary me-3" type="button" :disabled="loading" @click.prevent="getSeries">
           Get data
         </button>
-        <button v-if="isAuthenticated" class="btn btn-sm btn-secondary mx-3" type="button" :disabled="loading" data-bs-toggle="modal" data-bs-target="#addSeriesModal">
+        <button v-if="isAuthenticated" class="btn btn-sm btn-secondary" type="button" :disabled="loading" data-bs-toggle="modal" data-bs-target="#addSeriesModal">
           Add new
         </button>
       </div>
@@ -393,10 +393,10 @@
               <td><i class="fa fa-square" :style="{ color: s.color }"></i> {{ s.color }}</td>
               <td>{{ s?.icon ?? 'N/A' }}</td>
               <td v-if="isAuthenticated">
-                <button class="btn btn-sm btn-warning" type="button" :disabled="loading" @click="openEditModal(s)">
+                <button class="btn btn-sm btn-warning me-2" type="button" :disabled="loading" @click="openEditModal(s)">
                   Edit
                 </button>
-                <button class="btn btn-sm btn-danger mx-2" type="button" :disabled="loading" @click.prevent="deleteSeries(s.id)">
+                <button class="btn btn-sm btn-danger" type="button" :disabled="loading" @click.prevent="deleteSeries(s.id)">
                   Delete
                 </button>
               </td>
