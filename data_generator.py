@@ -23,7 +23,7 @@ import requests
 # ***
 # CONFIGURATION
 # ***
-SERVER_API_URL = 'http://127.0.0.1:8000/api/'
+SERVER_API_URL = 'https://iw-zai.polandcentral.cloudapp.azure.com/api/'
 SERVER_MEASUREMENTS_URL = SERVER_API_URL + "measurements"  # endpoint for inserting data (defaults to Django development server)
 API_KEY_HEADER = "X-API-Key"                           # header carrying the API key
 REQUEST_TIMEOUT = 10                                   # seconds
@@ -62,6 +62,23 @@ def format_timestamp(dt: datetime) -> str:
     """Timestamp format sent to the server"""
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+def format_error(e: requests.RequestException) -> str:
+    resp = e.response
+    if resp is None:                      # timeout, connection error itp.
+        return str(e)
+
+    try:
+        body = resp.json()
+    except ValueError:                   
+        return f"HTTP {resp.status_code}: {resp.text[:200]}"
+
+    errors = body.get("errors") if isinstance(body, dict) else None
+    if isinstance(errors, dict):
+        details = "; ".join(f"{field}: {msg}" for field, msg in errors.items())
+    else:
+        details = str(body)
+
+    return f"HTTP {resp.status_code}: {details}"
 
 def send_measurement(api_key: str, value: float, dt: datetime, dry_run: bool = False) -> bool:
     """Sends a single measurement {value, timestamp}."""
@@ -80,7 +97,7 @@ def send_measurement(api_key: str, value: float, dt: datetime, dry_run: bool = F
         print(f"[OK {resp.status_code}] key=...{api_key[-4:]} -> {payload}")
         return True
     except requests.RequestException as e:
-        print(f"[ERROR] key=...{api_key[-4:]} -> {payload}: {e}")
+        print(f"[ERROR] key=...{api_key[-4:]} -> {payload}: {format_error(e)}")
         return False
 
 
